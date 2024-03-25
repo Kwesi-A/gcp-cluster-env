@@ -1,0 +1,35 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t amooedwin/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run amooedwin/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t amooedwin/multi-client ./client
+  - docker build -t amooedwin/multi-nginx ./nginx
+  - docker build -t amooedwin/multi-server ./server
+  - docker build -t amooedwin/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push amooedwin/multi-client
+  - docker push amooedwin/multi-nginx
+  - docker push amooedwin/multi-server
+  - docker push amooedwin/multi-worker
+
+deploy:
+  provider: elasticbeanstalk
+  region: eu-west-2
+  app: multi-docker
+  env: MultiDocker-env
+  bucket_name: elasticbeanstalk-eu-west-2-339713089708
+  bucket_path: docker-multi
+  on:
+    branch: main
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key:
+    secure: $AWS_SECRET_KEY
