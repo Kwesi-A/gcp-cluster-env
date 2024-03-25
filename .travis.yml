@@ -11,17 +11,12 @@ before_install:
   - source $HOME/google-cloud-sdk/path.bash.inc
   - gcloud components update kubectl 
   - gcloud auth activate-service-account --key-file service-account.json
-  - gcloud config set project multi-container-k8s-417919
-  - gcloud config set compute/zone europe-west1
-  - gcloud container clusters get-credentials multi-cluster
+  - gcloud config set project kube-cluster-project-418311
+  - gcloud config set compute/zone europe-west9-a
+  - gcloud container clusters get-credentials kube-cluster-project
   - echo "$DOCKER_PASSWORD" | docker login -u "DOCKER_USERNAME" --password-stdin
   - docker run -t amooedwin/react-test -f ./client/Dockerfile.dev ./client
 
 script: 
   - docker run amooedwin/react-test npm test -- --coverage
 
-deploy:
-  provider: script
-  script: bash ./deploy.sh
-  on:
-    branch: main 
